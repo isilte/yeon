@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- saved from url=(0117)file:///D:/ICLOUD/iCloudDrive/%EB%85%B8%ED%95%98%EB%B0%B1/%EB%85%B8%ED%95%98%EB%B0%B1%EC%9D%BC%EC%A0%95%ED%91%9C.html -->
-<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>편집 가능한 체크박스 일정표</title>
     <style>
@@ -147,6 +147,12 @@
         .edit-btn:hover {
             opacity: 0.8;
         }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
         .download-btn {
             background-color: #4CAF50;
             color: white;
@@ -155,10 +161,21 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            margin-top: 20px;
         }
         .download-btn:hover {
             background-color: #45a049;
+        }
+        .url-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .url-btn:hover {
+            background-color: #0056b3;
         }
         .tab-container {
             margin-bottom: 20px;
@@ -190,6 +207,60 @@
             margin-bottom: 20px;
             font-size: 14px;
         }
+        
+        /* 모달 스타일 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .modal textarea {
+            width: 100%;
+            height: 100px;
+            margin: 15px 0;
+            resize: vertical;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal-buttons {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            margin-left: 10px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .modal-buttons .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .modal-buttons .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -199,11 +270,12 @@
             • 일정 내용을 <strong>더블클릭</strong>하면 수정할 수 있습니다 
             • 체크박스를 클릭하여 완료 표시 
             • Enter 키로 저장, Esc 키로 취소
+            • <strong>📁 북마크용 URL 생성</strong>으로 현재 상태를 URL에 저장 가능
         </div>
 
         <div class="tab-container">
-            <button class="tab-button active" onclick="showTab(&#39;july&#39;)">7월</button>
-            <button class="tab-button" onclick="showTab(&#39;august&#39;)">8월</button>
+            <button class="tab-button active" onclick="showTab('july')">7월</button>
+            <button class="tab-button" onclick="showTab('august')">8월</button>
         </div>
 
         <!-- July Tab -->
@@ -227,7 +299,7 @@
                         <div class="task-content" data-task="july-15-content">캐릭터 기본정보 작성 (이름, 나이, 직위, 출신, 성격, 관계)</div>
                         <div class="checkbox-container">
                             <input type="checkbox" class="task-checkbox" data-task="july-15">
-                            <span class="task-text completed">완료</span>
+                            <span class="task-text">완료</span>
                         </div>
                         <div class="edit-hint">더블클릭하여 수정</div>
                     </div>
@@ -238,7 +310,7 @@
                         <div class="task-content" data-task="july-16-content">캐릭터 기본정보 완성 (비밀 설정 포함)</div>
                         <div class="checkbox-container">
                             <input type="checkbox" class="task-checkbox" data-task="july-16">
-                            <span class="task-text completed">완료</span>
+                            <span class="task-text">완료</span>
                         </div>
                         <div class="edit-hint">더블클릭하여 수정</div>
                     </div>
@@ -246,10 +318,10 @@
                 <div class="day-cell">
                     <div class="day-number">17</div>
                     <div class="task-item">
-                        <div class="task-content" data-task="july-17-content" style="display: block;">연시담 감정코드 출력 문제 테스트 및 수정</div>
+                        <div class="task-content" data-task="july-17-content">연시담 감정코드 출력 문제 테스트 및 수정</div>
                         <div class="checkbox-container">
                             <input type="checkbox" class="task-checkbox" data-task="july-17">
-                            <span class="task-text completed">완료</span>
+                            <span class="task-text">완료</span>
                         </div>
                         <div class="edit-hint">더블클릭하여 수정</div>
                     </div>
@@ -559,11 +631,114 @@
             </div>
         </div>
 
-        <button class="download-btn" onclick="downloadExcel()">엑셀 파일로 다운로드</button>
+        <div class="action-buttons">
+            <button class="url-btn" onclick="saveToURL()">📁 북마크용 URL 생성</button>
+            <button class="download-btn" onclick="downloadExcel()">📊 엑셀 파일로 다운로드</button>
+        </div>
     </div>
 
-    <script src="./노하백일정표_files/xlsx.full.min.js.다운로드"></script>
+    <!-- URL 저장 모달 -->
+    <div id="urlModal" class="modal">
+        <div class="modal-content">
+            <h3>📁 북마크용 URL</h3>
+            <p>이 URL을 북마크로 저장하면 현재 수정사항과 체크상태가 모두 보존됩니다:</p>
+            <textarea id="urlText" readonly placeholder="URL이 여기에 표시됩니다..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="copyURL()">📋 URL 복사</button>
+                <button class="btn-secondary" onclick="closeModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script>
+        // 전역 변수
+        let taskStates = {};
+        let taskContents = {};
+        let currentEditElement = null;
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromURL();
+            initializeEditFeature();
+            initializeCheckboxes();
+        });
+
+        // URL에서 데이터 로드
+        function loadFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+            
+            if (encodedData) {
+                try {
+                    const decoded = JSON.parse(decodeURIComponent(atob(encodedData)));
+                    taskStates = decoded.taskStates || {};
+                    taskContents = decoded.taskContents || {};
+                    
+                    // 저장된 내용 복원
+                    Object.keys(taskContents).forEach(taskId => {
+                        const element = document.querySelector(`[data-task="${taskId}"]`);
+                        if (element) {
+                            element.textContent = taskContents[taskId];
+                        }
+                    });
+                    
+                    // 체크박스 상태 복원
+                    Object.keys(taskStates).forEach(taskId => {
+                        const checkbox = document.querySelector(`input[data-task="${taskId}"]`);
+                        if (checkbox) {
+                            checkbox.checked = taskStates[taskId];
+                            updateTaskAppearance(checkbox);
+                        }
+                    });
+                } catch (e) {
+                    console.error('데이터 로드 실패:', e);
+                }
+            }
+        }
+
+        // URL로 데이터 저장
+        function saveToURL() {
+            // 현재 모든 텍스트 내용 수집
+            document.querySelectorAll('.task-content').forEach(element => {
+                const taskId = element.dataset.task;
+                if (taskId) {
+                    taskContents[taskId] = element.textContent;
+                }
+            });
+
+            const data = {
+                taskStates: taskStates,
+                taskContents: taskContents,
+                savedAt: new Date().toISOString()
+            };
+            
+            const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+            const newUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
+            
+            document.getElementById('urlText').value = newUrl;
+            document.getElementById('urlModal').style.display = 'flex';
+            
+            // 현재 페이지 URL도 업데이트
+            history.replaceState(null, '', newUrl);
+        }
+
+        function copyURL() {
+            const urlText = document.getElementById('urlText');
+            urlText.select();
+            urlText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(urlText.value).then(() => {
+                alert('URL이 클립보드에 복사되었습니다!\n이 URL을 북마크로 저장하시면 현재 상태가 보존됩니다.');
+            }).catch(() => {
+                // 복사 실패시 수동 복사 안내
+                alert('자동 복사에 실패했습니다.\nCtrl+C를 눌러 수동으로 복사해주세요.');
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('urlModal').style.display = 'none';
+        }
+
         // 탭 전환 기능
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -578,18 +753,8 @@
             event.target.classList.add('active');
         }
 
-        // 체크박스 상태 관리
-        let taskStates = {};
-        let currentEditElement = null;
-
         // 편집 기능 초기화
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeEditFeature();
-            initializeCheckboxes();
-        });
-
         function initializeEditFeature() {
-            // 모든 task-content 요소에 더블클릭 이벤트 추가
             document.querySelectorAll('.task-content').forEach(element => {
                 element.addEventListener('dblclick', function() {
                     startEdit(this);
@@ -605,7 +770,6 @@
             currentEditElement = element;
             const currentText = element.textContent;
             
-            // 텍스트를 textarea로 변경
             const textarea = document.createElement('textarea');
             textarea.className = 'task-input';
             textarea.value = currentText;
@@ -619,7 +783,6 @@
                 }
             });
 
-            // 저장/취소 버튼 생성
             const buttonDiv = document.createElement('div');
             buttonDiv.className = 'edit-buttons show';
             buttonDiv.innerHTML = `
@@ -627,12 +790,10 @@
                 <button class="edit-btn cancel" onclick="cancelEdit()">취소</button>
             `;
 
-            // 요소 교체
             element.style.display = 'none';
             element.parentNode.insertBefore(textarea, element.nextSibling);
             element.parentNode.insertBefore(buttonDiv, textarea.nextSibling);
             
-            // 포커스 및 선택
             textarea.focus();
             textarea.select();
         }
@@ -645,6 +806,11 @@
             
             if (newText) {
                 currentEditElement.textContent = newText;
+                // 변경사항을 taskContents에도 저장
+                const taskId = currentEditElement.dataset.task;
+                if (taskId) {
+                    taskContents[taskId] = newText;
+                }
             }
             
             finishEdit();
@@ -660,10 +826,8 @@
             const textarea = currentEditElement.nextElementSibling;
             const buttonDiv = textarea ? textarea.nextElementSibling : null;
             
-            // 원래 요소 복원
             currentEditElement.style.display = 'block';
             
-            // 임시 요소들 제거
             if (textarea && textarea.className === 'task-input') {
                 textarea.remove();
             }
@@ -674,6 +838,7 @@
             currentEditElement = null;
         }
 
+        // 체크박스 기능 초기화
         function initializeCheckboxes() {
             document.querySelectorAll('.task-checkbox').forEach(checkbox => {
                 const taskId = checkbox.dataset.task;
@@ -719,7 +884,6 @@
                 ['월', '화', '수', '목', '금', '토', '일']
             ];
 
-            // July 시트의 실제 데이터 수집
             const julyTasks = [];
             document.querySelectorAll('#july .day-cell').forEach(cell => {
                 const dayNumber = cell.querySelector('.day-number');
@@ -742,7 +906,6 @@
                 }
             });
 
-            // 7개씩 나누어 행 생성
             for (let i = 0; i < julyTasks.length; i += 7) {
                 julyData.push(julyTasks.slice(i, i + 7));
             }
@@ -786,18 +949,26 @@
             const augustSheet = XLSX.utils.aoa_to_sheet(augustData);
             XLSX.utils.book_append_sheet(workbook, augustSheet, 'August');
             
-            // 파일 다운로드
-            XLSX.writeFile(workbook, '편집_가능한_일정표.xlsx');
+            XLSX.writeFile(workbook, '노하백일정표_' + new Date().toISOString().slice(0,10) + '.xlsx');
             
             alert('수정된 내용이 포함된 엑셀 파일이 다운로드되었습니다!');
         }
 
+        // 모달 외부 클릭시 닫기
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('urlModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
         // 초기 진행률 계산
         updateProgress();
 
-        // 전역 함수로 등록 (버튼에서 호출하기 위해)
+        // 전역 함수로 등록
         window.saveEdit = saveEdit;
         window.cancelEdit = cancelEdit;
     </script>
 
-</body></html>
+</body>
+</html>
