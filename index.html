@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<!-- saved from url=(0117)file:///D:/ICLOUD/iCloudDrive/%EB%85%B8%ED%95%98%EB%B0%B1/%EB%85%B8%ED%95%98%EB%B0%B1%EC%9D%BC%EC%A0%95%ED%91%9C.html -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>편집 가능한 체크박스 일정표</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .month-header {
+            text-align: center;
+            background-color: #f2f2f2;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 30px;
+        }
+        .day-header {
+            background-color: #B7DEE8;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .day-cell {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            min-height: 120px;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        .day-cell:hover {
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .day-number {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .task-item {
+            font-size: 11px;
+            line-height: 1.3;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .task-content {
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+            min-height: 20px;
+            word-wrap: break-word;
+            margin-bottom: 5px;
+        }
+        .task-content:hover {
+            background-color: #e8f4fd;
+            border: 1px dashed #007bff;
+        }
+        .task-content.editing {
+            background-color: #fff;
+            border: 2px solid #007bff;
+        }
+        .task-input {
+            width: 100%;
+            padding: 4px;
+            border: 2px solid #007bff;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            background-color: #fff;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .task-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .task-text {
+            flex: 1;
+            word-wrap: break-word;
+        }
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .rest-day {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        .edit-hint {
+            font-size: 9px;
+            color: #666;
+            font-style: italic;
+            margin-top: 2px;
+            opacity: 0.7;
+        }
+        .edit-buttons {
+            margin-top: 5px;
+            display: none;
+        }
+        .edit-buttons.show {
+            display: block;
+        }
+        .edit-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            margin-right: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+        .edit-btn.cancel {
+            background-color: #6c757d;
+        }
+        .edit-btn:hover {
+            opacity: 0.8;
+        }
+        .download-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .download-btn:hover {
+            background-color: #45a049;
+        }
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            background-color: #e9ecef;
+            border: none;
+            padding: 10px 20px;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            font-size: 16px;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="instructions">
+            <strong>사용법:</strong> 
+            • 일정 내용을 <strong>더블클릭</strong>하면 수정할 수 있습니다 
+            • 체크박스를 클릭하여 완료 표시 
+            • Enter 키로 저장, Esc 키로 취소
+        </div>
+
+        <div class="tab-container">
+            <button class="tab-button active" onclick="showTab(&#39;july&#39;)">7월</button>
+            <button class="tab-button" onclick="showTab(&#39;august&#39;)">8월</button>
+        </div>
+
+        <!-- July Tab -->
+        <div id="july" class="tab-content active">
+            <div class="month-header">2025년 7월</div>
+            <div class="calendar-grid">
+                <div class="day-header">월</div>
+                <div class="day-header">화</div>
+                <div class="day-header">수</div>
+                <div class="day-header">목</div>
+                <div class="day-header">금</div>
+                <div class="day-header">토</div>
+                <div class="day-header">일</div>
+
+                <div class="day-cell">
+                    <div class="day-number">14</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">15</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-15-content">캐릭터 기본정보 작성 (이름, 나이, 직위, 출신, 성격, 관계)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-15">
+                            <span class="task-text completed">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">16</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-16-content">캐릭터 기본정보 완성 (비밀 설정 포함)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-16">
+                            <span class="task-text completed">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">17</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-17-content" style="display: block;">연시담 감정코드 출력 문제 테스트 및 수정</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-17">
+                            <span class="task-text completed">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">18</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-18-content">감정 코드 뼈대 선정 및 초기 설계</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-18">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">19</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-19-content">감정 코드 세부 설명 초안 작업</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-19">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">20</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-20-content">감정 코드 설명 세부 픽스 및 운용 규칙 초안 작성</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-20">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+
+                <div class="day-cell rest-day">
+                    <div class="day-number">21</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-21-content">휴식일</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-21">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">22</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-22-content">감정 코드 운용 규칙 픽스 및 감정 코드 최종 리뷰</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-22">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">23</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-23-content">프롬프트 작성 (기본정보 교체, 출력규칙 수정)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-23">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">24</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-24-content">프롬프트 작성 (발화 구조)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-24">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">25</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-25-content">프롬프트 작성 (감정 코드 출력 유도 문장)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-25">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">26</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-26-content">프롬프트 작성 (접촉구조 공간 조건 변경, 세계관 초안)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-26">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">27</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-27-content">프롬프트 세계관 부분 픽스 및 전체 프롬프트 리뷰</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-27">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+
+                <div class="day-cell rest-day">
+                    <div class="day-number">28</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-28-content">휴식일</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-28">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">29</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-29-content">노하백 캐릭터 이미지 생성 기획(NovelAI)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-29">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">30</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-30-content">노하백 캐릭터 이미지 수정 및 픽스 완료</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-30">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">31</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="july-31-content">풍경 이미지 연시담 프로젝트에서 선별 및 정리 완료</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="july-31">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell"></div>
+                <div class="day-cell"></div>
+            </div>
+        </div>
+
+        <!-- August Tab -->
+        <div id="august" class="tab-content">
+            <div class="month-header">2025년 8월</div>
+            <div class="calendar-grid">
+                <div class="day-header">월</div>
+                <div class="day-header">화</div>
+                <div class="day-header">수</div>
+                <div class="day-header">목</div>
+                <div class="day-header">금</div>
+                <div class="day-header">토</div>
+                <div class="day-header">일</div>
+
+                <div class="day-cell"></div>
+                <div class="day-cell"></div>
+                <div class="day-cell"></div>
+                <div class="day-cell"></div>
+                <div class="day-cell">
+                    <div class="day-number">1</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-1-content">시작 상황 설정 초안 작성 (첫 출력, 유저 진입점)</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-1">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">2</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-2-content">비출력용 초기 심리 상태 블럭 작성 초안</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-2">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">3</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-3-content">시작 상황 및 초기 심리 상태 블럭 픽스</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-3">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+
+                <div class="day-cell rest-day">
+                    <div class="day-number">4</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-4-content">휴식일</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-4">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">5</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-5-content">노하백 홍보 문구 초안 작성</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-5">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">6</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-6-content">홍보 문구 리뷰 및 픽스</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-6">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">7</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-7-content">전체 콘텐츠 통합 최종 리뷰 및 점검</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-7">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">8</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-8-content">최종 AI 출력 테스트 진행 및 오류 체크</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-8">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">9</div>
+                    <div class="task-item">
+                        <div class="task-content" data-task="august-9-content">테스트 결과 반영 및 최종 프롬프트 조율 완료</div>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="task-checkbox" data-task="august-9">
+                            <span class="task-text">완료</span>
+                        </div>
+                        <div class="edit-hint">더블클릭하여 수정</div>
+                    </div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">10</div>
+                </div>
+
+                <div class="day-cell">
+                    <div class="day-number">11</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">12</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">13</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">14</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">15</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">16</div>
+                </div>
+                <div class="day-cell">
+                    <div class="day-number">17</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="download-btn" onclick="downloadExcel()">엑셀 파일로 다운로드</button>
+    </div>
+
+    <script src="./노하백일정표_files/xlsx.full.min.js.다운로드"></script>
+    <script>
+        // 탭 전환 기능
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // 체크박스 상태 관리
+        let taskStates = {};
+        let currentEditElement = null;
+
+        // 편집 기능 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEditFeature();
+            initializeCheckboxes();
+        });
+
+        function initializeEditFeature() {
+            // 모든 task-content 요소에 더블클릭 이벤트 추가
+            document.querySelectorAll('.task-content').forEach(element => {
+                element.addEventListener('dblclick', function() {
+                    startEdit(this);
+                });
+            });
+        }
+
+        function startEdit(element) {
+            if (currentEditElement) {
+                cancelEdit();
+            }
+
+            currentEditElement = element;
+            const currentText = element.textContent;
+            
+            // 텍스트를 textarea로 변경
+            const textarea = document.createElement('textarea');
+            textarea.className = 'task-input';
+            textarea.value = currentText;
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
+
+            // 저장/취소 버튼 생성
+            const buttonDiv = document.createElement('div');
+            buttonDiv.className = 'edit-buttons show';
+            buttonDiv.innerHTML = `
+                <button class="edit-btn" onclick="saveEdit()">저장</button>
+                <button class="edit-btn cancel" onclick="cancelEdit()">취소</button>
+            `;
+
+            // 요소 교체
+            element.style.display = 'none';
+            element.parentNode.insertBefore(textarea, element.nextSibling);
+            element.parentNode.insertBefore(buttonDiv, textarea.nextSibling);
+            
+            // 포커스 및 선택
+            textarea.focus();
+            textarea.select();
+        }
+
+        function saveEdit() {
+            if (!currentEditElement) return;
+
+            const textarea = currentEditElement.nextElementSibling;
+            const newText = textarea.value.trim();
+            
+            if (newText) {
+                currentEditElement.textContent = newText;
+            }
+            
+            finishEdit();
+        }
+
+        function cancelEdit() {
+            finishEdit();
+        }
+
+        function finishEdit() {
+            if (!currentEditElement) return;
+
+            const textarea = currentEditElement.nextElementSibling;
+            const buttonDiv = textarea ? textarea.nextElementSibling : null;
+            
+            // 원래 요소 복원
+            currentEditElement.style.display = 'block';
+            
+            // 임시 요소들 제거
+            if (textarea && textarea.className === 'task-input') {
+                textarea.remove();
+            }
+            if (buttonDiv && buttonDiv.className.includes('edit-buttons')) {
+                buttonDiv.remove();
+            }
+            
+            currentEditElement = null;
+        }
+
+        function initializeCheckboxes() {
+            document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                const taskId = checkbox.dataset.task;
+                
+                if (taskStates[taskId]) {
+                    checkbox.checked = taskStates[taskId];
+                    updateTaskAppearance(checkbox);
+                }
+                
+                checkbox.addEventListener('change', function() {
+                    taskStates[taskId] = this.checked;
+                    updateTaskAppearance(this);
+                    updateProgress();
+                });
+            });
+        }
+
+        function updateTaskAppearance(checkbox) {
+            const taskText = checkbox.nextElementSibling;
+            if (checkbox.checked) {
+                taskText.classList.add('completed');
+            } else {
+                taskText.classList.remove('completed');
+            }
+        }
+
+        function updateProgress() {
+            const totalTasks = document.querySelectorAll('.task-checkbox').length;
+            const completedTasks = document.querySelectorAll('.task-checkbox:checked').length;
+            const progress = totalTasks > 0 ? (completedTasks / totalTasks * 100).toFixed(1) : 0;
+            
+            console.log(`진행률: ${progress}% (${completedTasks}/${totalTasks})`);
+        }
+
+        // 엑셀 다운로드 기능
+        function downloadExcel() {
+            const workbook = XLSX.utils.book_new();
+            
+            // July 시트 데이터 생성
+            const julyData = [
+                ['2025년 7월', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', ''],
+                ['월', '화', '수', '목', '금', '토', '일']
+            ];
+
+            // July 시트의 실제 데이터 수집
+            const julyTasks = [];
+            document.querySelectorAll('#july .day-cell').forEach(cell => {
+                const dayNumber = cell.querySelector('.day-number');
+                const taskContent = cell.querySelector('.task-content');
+                const checkbox = cell.querySelector('.task-checkbox');
+                
+                if (dayNumber) {
+                    let cellText = dayNumber.textContent;
+                    if (taskContent) {
+                        cellText += '\n' + taskContent.textContent;
+                        if (checkbox && checkbox.checked) {
+                            cellText += '\n✓ 완료';
+                        } else if (checkbox) {
+                            cellText += '\n☐ 미완료';
+                        }
+                    }
+                    julyTasks.push(cellText);
+                } else {
+                    julyTasks.push('');
+                }
+            });
+
+            // 7개씩 나누어 행 생성
+            for (let i = 0; i < julyTasks.length; i += 7) {
+                julyData.push(julyTasks.slice(i, i + 7));
+            }
+            
+            const julySheet = XLSX.utils.aoa_to_sheet(julyData);
+            XLSX.utils.book_append_sheet(workbook, julySheet, 'July');
+            
+            // August 시트 데이터 생성
+            const augustData = [
+                ['2025년 8월', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', ''],
+                ['월', '화', '수', '목', '금', '토', '일']
+            ];
+
+            const augustTasks = [];
+            document.querySelectorAll('#august .day-cell').forEach(cell => {
+                const dayNumber = cell.querySelector('.day-number');
+                const taskContent = cell.querySelector('.task-content');
+                const checkbox = cell.querySelector('.task-checkbox');
+                
+                if (dayNumber) {
+                    let cellText = dayNumber.textContent;
+                    if (taskContent) {
+                        cellText += '\n' + taskContent.textContent;
+                        if (checkbox && checkbox.checked) {
+                            cellText += '\n✓ 완료';
+                        } else if (checkbox) {
+                            cellText += '\n☐ 미완료';
+                        }
+                    }
+                    augustTasks.push(cellText);
+                } else {
+                    augustTasks.push('');
+                }
+            });
+
+            for (let i = 0; i < augustTasks.length; i += 7) {
+                augustData.push(augustTasks.slice(i, i + 7));
+            }
+            
+            const augustSheet = XLSX.utils.aoa_to_sheet(augustData);
+            XLSX.utils.book_append_sheet(workbook, augustSheet, 'August');
+            
+            // 파일 다운로드
+            XLSX.writeFile(workbook, '편집_가능한_일정표.xlsx');
+            
+            alert('수정된 내용이 포함된 엑셀 파일이 다운로드되었습니다!');
+        }
+
+        // 초기 진행률 계산
+        updateProgress();
+
+        // 전역 함수로 등록 (버튼에서 호출하기 위해)
+        window.saveEdit = saveEdit;
+        window.cancelEdit = cancelEdit;
+    </script>
+
+</body></html>
